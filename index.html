@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <title>Blurring</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="dithering.js"></script>
+  </head>
+
+  <body>
+    <form>
+      <label for="ditherType" style="padding-left: 20px;">Dithering algorithm:</label>
+      <select id="ditherType">
+        <option value="floydSteinberg">Floyd-Steinberg</option>
+        <option value="thresholding">Thresholding</option>
+        <option value="bayer2x2">Bayer 2&times;2</option>
+        <option value="bayer4x4">Bayer 4&times;4</option>
+        <option value="bayer8x8">Bayer 8&times;8</option>
+      </select>
+      <select id="colourPalette">
+        <option value="blackWhite">B&amp;W</option>
+        <option value="printer">CYMK printer</option>
+        <option value="additive">Additive primaries</option>
+        <option value="subtractive">Subtractive primaries</option>
+      </select>
+      <button id="applyButton" type="button" class="progressButton">Apply</button>
+      <progress value="0" max="100" id="progressBar" class="progressButton hidden"></progress>
+      <button id="resetButton" type="button">Reset</button>
+    </form><br>
+    <img src="tiger.jpg" id="tiger_img" style="display: none;" >
+    <canvas id="demo" width="900" height="600"></canvas>
+  </body>
+</html>
