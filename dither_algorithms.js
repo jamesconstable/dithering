@@ -103,6 +103,20 @@ function addSquare(a, b) {
   return a + b*b;
 }
 
+function postResult(image) {
+  postMessage({
+    type: 'complete',
+    imageData: image
+  });
+}
+
+function postProgressUpdate(n) {
+  postMessage({
+    type: 'progressUpdate',
+    value: n
+  });
+}
+
 function arrayCopy() {
   var from, fromStart, to, toStart, length;
   if (arguments.length == 2) {
@@ -154,6 +168,23 @@ function nearestColour(colour, candidates, errorDest) {
   return candidates[bestCandidate];
 }
 
+function thresholding(image, colours) {
+  var width = image.width;
+  var height = image.height;
+  var temp = [0, 0, 0];
+  var error = [0, 0, 0];
+
+  for (var i = 0; i < height; ++i) {
+    for (var j = 0; j < width; ++j) {
+      arrayCopy(image.data, i*width*4 + j*4, temp, 0, 3);
+      arrayCopy(nearestColour(temp, colours, error), 0,
+                image.data, i*width*4 + j*4, 3);
+    }
+    postProgressUpdate(i / height * 100);
+  }
+  postResult(image);
+}
+
 function bayer(matrix, image, colours) {
   var width = image.width;
   var height = image.height;
@@ -173,32 +204,9 @@ function bayer(matrix, image, colours) {
                 image.data, i*width*4 + j*4, 3);
       image.data[i*width*4 + j*4 + 3] = 255;
     }
+    postProgressUpdate(i / height * 100);
   }
-
-  postMessage({
-    type: 'complete',
-    imageData: image
-  });
-}
-
-function thresholding(image, colours) {
-  var width = image.width;
-  var height = image.height;
-  var temp = [0, 0, 0];
-  var error = [0, 0, 0];
-
-  for (var i = 0; i < height; ++i) {
-    for (var j = 0; j < width; ++j) {
-      arrayCopy(image.data, i*width*4 + j*4, temp, 0, 3);
-      arrayCopy(nearestColour(temp, colours, error), 0,
-                image.data, i*width*4 + j*4, 3);
-    }
-  }
-
-  postMessage({
-    type: 'complete',
-    imageData: image
-  });
+  postResult(image);
 }
 
 function addWeightedError(colour, error, weight) {
@@ -245,10 +253,7 @@ function floydSteinberg(image, colours) {
           diffuseError(image.data, i+1, j+1, width, error, kernel[1][2], temp);
       }
     }
+    postProgressUpdate(i / height * 100);
   }
-
-  postMessage({
-    type: 'complete',
-    imageData: image
-  });
+  postResult(image);
 }
