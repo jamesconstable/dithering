@@ -4,7 +4,8 @@ onmessage = function(e) {
 };
 
 var ditherFunctions = {
-  'thresholding': function(d, c) { thresholding(d, c) },
+  'thresholding': function(d, c) { thresholding(d, c); },
+  'random': function(d, c) { randomDither(1, d, c); },
   'bayer2x2': function(d, c) { bayer(bayerMatrix2x2, d, c); },
   'bayer4x4': function(d, c) { bayer(bayerMatrix4x4, d, c); },
   'bayer8x8': function(d, c) { bayer(bayerMatrix8x8, d, c); },
@@ -100,6 +101,10 @@ function degamma(n) {
   return Math.pow(n, 2);
 }
 
+function add(a, b) {
+  return a + b;
+}
+
 function addSquare(a, b) {
   return a + b*b;
 }
@@ -138,6 +143,15 @@ function arrayCopy() {
   }
 }
 
+function colourDistance(target, candidate, errorDest) {
+  // Calculate the error per channel, and return the Euclidean colour
+  // distance in degamma-ed space.
+  errorDest[0] = degamma(candidate[0]) - degamma(target[0]);
+  errorDest[1] = degamma(candidate[1]) - degamma(target[1]);
+  errorDest[2] = degamma(candidate[2]) - degamma(target[2]);
+  return Math.sqrt(errorDest.reduce(addSquare, 0));
+}
+
 function nearestColour(colour, candidates, errorDest) {
   var bestCandidate = 0;
   var bestError = Infinity;
@@ -146,10 +160,7 @@ function nearestColour(colour, candidates, errorDest) {
   var randomCounter = 1;
 
   for (var i = 0; i < candidates.length; ++i) {
-    channelError[0] = degamma(colour[0]) - degamma(candidates[i][0]);
-    channelError[1] = degamma(colour[1]) - degamma(candidates[i][1]);
-    channelError[2] = degamma(colour[2]) - degamma(candidates[i][2]);
-    currentError = channelError.reduce(addSquare, 0);
+    currentError = colourDistance(candidates[i], colour, channelError);
 
     // The randomisation here prevents us from always choosing the same colour
     // in cases where there are multiple equally good candidates. This is
@@ -180,6 +191,37 @@ function thresholding(image, colours) {
       arrayCopy(image.data, i*width*4 + j*4, temp, 0, 3);
       arrayCopy(nearestColour(temp, colours, error), 0,
                 image.data, i*width*4 + j*4, 3);
+    }
+    postProgressUpdate(i / height * 100);
+  }
+  postResult(image);
+}
+
+function randomDither(exp, image, colours) {
+  var width = image.width;
+  var height = image.height;
+  var temp = [0, 0, 0];
+  var error = [0, 0, 0];
+  var r, acc, total;
+  var colourOdds = [];
+
+  for (var i = 0; i < height; ++i) {
+    for (var j = 0; j < width; ++j) {
+      total = 0;
+      arrayCopy(image.data, i*width*4 + j*4, temp, 0, 3);
+      for (var c = 0; c < colours.length; ++c) {
+        colourOdds[c] = 1 / colourDistance(colours[c], temp, error) ** exp;
+        total += colourOdds[c];
+      }
+
+      // Randomly select a colour based on the probabilities. Since the
+      // inverse distances are odds, not probabilities (they don't sum to 1),
+      // we need to normalise as we go.
+      r = Math.random();
+      for (c = acc = 0; c < colourOdds.length && r > acc; ++c) {
+        acc += colourOdds[c] / total;
+      }
+      arrayCopy(colours[c-1], 0, image.data, i*width*4 + j*4, 3);
     }
     postProgressUpdate(i / height * 100);
   }
