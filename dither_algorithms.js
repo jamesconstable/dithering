@@ -11,6 +11,7 @@ var ditherFunctions = {
   'bayer8x8': function(d, c) { ordered(bayerMatrix8x8, d, c); },
   'clusterDot4x4': function(d, c) { ordered(clusterDotMatrix4x4, d, c); },
   'clusterDot8x8': function(d, c) { ordered(clusterDotMatrix8x8, d, c); },
+  'voidAndCluster': function(d, c) { ordered(voidAndCluster, d, c); },
   'verticalStripes': function(d, c) { ordered(verticalStripes, d, c); },
   'horizontalStripes': function(d, c) { ordered(horizontalStripes, d, c); },
   'floydSteinberg': function(d, c) { floydSteinberg(d, c); }
@@ -61,6 +62,23 @@ var verticalStripes = prepareMatrix([[1, 2, 3, 4, 5, 6, 7, 8]]);
 
 var horizontalStripes = prepareMatrix(
     [[1], [2], [3], [4], [5], [6], [7], [8]]);
+
+var voidAndCluster = prepareMatrix([
+  [132, 188,   9,  79,  51,  19, 135,  90, 156, 103,  30,  96, 185,  74],
+  [ 23,  87, 114, 172, 143, 106,  35, 167,  10,  61, 152, 129,  41, 111],
+  [169, 138,  46,  29,  65, 189,  83,  55, 125, 190,  81,  14, 157,  57],
+  [  8,  62, 187, 122, 155,   7, 109, 178,  25, 101,  39, 177,  94, 124],
+  [ 84, 149,  97,  18,  89, 134,  45, 146,  70, 162, 140,  73,  31, 182],
+  [116,  28, 164,  48, 179,  66, 165,  15, 121,  49,   6, 128, 154,  53],
+  [191,  59, 127,  82, 117,  22, 107,  78, 174,  93, 192,  64, 100,  13],
+  [ 77, 145,   5, 186,  38, 150, 191,  40, 136,  24, 118,  32, 171, 133],
+  [ 36, 173, 104,  67, 130,  80,   4,  98,  58, 160,  71, 142,  54,  95],
+  [115,  21,  50, 159,  20, 147, 170, 123, 184,  12, 105, 181,   3, 166],
+  [153,  88, 183, 119,  92,  43,  68,  26,  85, 148,  44,  86, 126,  69],
+  [ 17, 137,  72,  11, 194, 113, 161, 139,  52, 112, 163,  27, 195,  47],
+  [175, 108,  42, 144,  34,  75,   2, 102, 196,  16,  76, 141, 110,  91],
+  [ 33,  63, 158,  99, 168, 120, 180,  60,  37, 131, 176,  56,   1, 151]
+]);
 
 var palettes = {
   'blackWhite': [
