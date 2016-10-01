@@ -6,25 +6,29 @@ onmessage = function(e) {
 var ditherFunctions = {
   'thresholding': function(d, c) { thresholding(d, c); },
   'random': function(d, c) { randomDither(1, d, c); },
-  'bayer2x2': function(d, c) { bayer(bayerMatrix2x2, d, c); },
-  'bayer4x4': function(d, c) { bayer(bayerMatrix4x4, d, c); },
-  'bayer8x8': function(d, c) { bayer(bayerMatrix8x8, d, c); },
+  'bayer2x2': function(d, c) { ordered(bayerMatrix2x2, d, c); },
+  'bayer4x4': function(d, c) { ordered(bayerMatrix4x4, d, c); },
+  'bayer8x8': function(d, c) { ordered(bayerMatrix8x8, d, c); },
+  'clusterDot4x4': function(d, c) { ordered(clusterDotMatrix4x4, d, c); },
+  'clusterDot8x8': function(d, c) { ordered(clusterDotMatrix8x8, d, c); },
+  'verticalStripes': function(d, c) { ordered(verticalStripes, d, c); },
+  'horizontalStripes': function(d, c) { ordered(horizontalStripes, d, c); },
   'floydSteinberg': function(d, c) { floydSteinberg(d, c); }
 };
 
-var bayerMatrix2x2 = prepareBayerMatrix([
+var bayerMatrix2x2 = prepareMatrix([
   [1, 3],
   [4, 2]
 ]);
 
-var bayerMatrix4x4 = prepareBayerMatrix([
+var bayerMatrix4x4 = prepareMatrix([
   [ 1,  9,  3, 11],
   [13,  5, 15,  7],
   [ 4, 12,  2, 10],
   [16,  8, 14,  6]
 ]);
 
-var bayerMatrix8x8 = prepareBayerMatrix([
+var bayerMatrix8x8 = prepareMatrix([
   [ 1, 49, 13, 61,  4, 52, 16, 64],
   [33, 17, 45, 29, 36, 20, 48, 32],
   [ 9, 57,  5, 53, 12, 60,  8, 56],
@@ -34,6 +38,29 @@ var bayerMatrix8x8 = prepareBayerMatrix([
   [11, 59,  7, 55, 10, 58,  6, 54],
   [43, 27, 39, 23, 42, 26, 38, 22]
 ]);
+
+var clusterDotMatrix4x4 = prepareMatrix([
+  [13,  6,  7, 14],
+  [ 5,  1,  2,  8],
+  [12,  4,  3,  9],
+  [16, 11, 10, 15]
+]);
+
+var clusterDotMatrix8x8 = prepareMatrix([
+  [25, 11, 13, 27, 36, 48, 50, 38],
+  [ 9,  1,  3, 15, 46, 60, 62, 52],
+  [23,  7,  5, 17, 44, 58, 64, 54],
+  [31, 21, 19, 29, 34, 42, 56, 40],
+  [35, 47, 49, 37, 26, 12, 14, 28],
+  [45, 59, 61, 51, 10,  2,  4, 16],
+  [43, 57, 63, 53, 24,  8,  6, 18],
+  [33, 41, 55, 39, 32, 22, 20, 30]
+]);
+
+var verticalStripes = prepareMatrix([[1, 2, 3, 4, 5, 6, 7, 8]]);
+
+var horizontalStripes = prepareMatrix(
+    [[1], [2], [3], [4], [5], [6], [7], [8]]);
 
 var palettes = {
   'blackWhite': [
@@ -79,17 +106,16 @@ var palettes = {
     [70, 30, 20]]
 };
 
-function prepareBayerMatrix(matrix) {
-  var scaleFactor = 1 / (matrix.length * matrix.length + 1);
+function prepareMatrix(matrix) {
+  var scaleFactor = 1 / (matrix.length * matrix[0].length + 1);
   var result = [];
   for (var i = 0; i < matrix.length; ++i) {
     var row = [];
-    for (var j = 0; j < matrix.length; ++j) {
+    for (var j = 0; j < matrix[i].length; ++j) {
       row.push(1 + scaleFactor * matrix[i][j]);
     }
     result.push(row);
   }
-
   return result;
 }
 
@@ -228,10 +254,11 @@ function randomDither(exp, image, colours) {
   postResult(image);
 }
 
-function bayer(matrix, image, colours) {
+function ordered(matrix, image, colours) {
   var width = image.width;
   var height = image.height;
-  var matrixSize = matrix.length;
+  var matrixHeight = matrix.length;
+  var matrixWidth = matrix[0].length;
   var temp = [0, 0, 0];
   var error = [0, 0, 0];
   var bayerOffset;
@@ -239,7 +266,7 @@ function bayer(matrix, image, colours) {
   for (var i = 0; i < height; ++i) {
     for (var j = 0; j < width; ++j) {
       arrayCopy(image.data, i*width*4 + j*4, temp, 0, 3);
-      bayerOffset = matrix[i % matrixSize][j % matrixSize];
+      bayerOffset = matrix[i % matrixHeight][j % matrixWidth];
       temp[0] *= bayerOffset;
       temp[1] *= bayerOffset;
       temp[2] *= bayerOffset;
